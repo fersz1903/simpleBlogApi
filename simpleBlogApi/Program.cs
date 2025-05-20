@@ -9,6 +9,7 @@ using simpleBlogApi.Models;
 using simpleBlogApi.Repositories;
 using simpleBlogApi.Repositories.Interfaces;
 using simpleBlogApi.Services;
+using simpleBlogApi.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,9 +35,17 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connect
 
 
 #region DEPENDENCY
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.Configure<FileUploadSettings>(
+    builder.Configuration.GetSection("FileUploadSettings")
+);
+builder.Services.AddScoped<IContentRepository, ContentRepository>();
+builder.Services.AddScoped<IContentService, ContentService>();
+builder.Services.AddScoped<IPostService, PostService>();
 #endregion
 
 var app = builder.Build();
@@ -66,6 +75,8 @@ app.UseMiddleware<ExceptionMiddleware>();
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.UseStaticFiles();
 
 app.MapControllers();
 

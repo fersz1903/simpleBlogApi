@@ -41,7 +41,9 @@ namespace simpleBlogApi.Controllers
 
             if (!result)
             {
-                return BadRequest(new ResponseDto<object>(false, "Email already in use"));
+                return BadRequest(
+                    new ResponseDto<object>(false, "Email already in use", statusCode: 400)
+                );
             }
             return Ok(
                 new ResponseDto<object>(
@@ -63,11 +65,15 @@ namespace simpleBlogApi.Controllers
             var loginResult = await _userRepository.LoginAsync(dto.Email, dto.Password);
 
             if (!loginResult.Success)
-                return Unauthorized(new ResponseDto<object>(false, loginResult.ErrorMessage!));
+                return Unauthorized(
+                    new ResponseDto<object>(false, loginResult.ErrorMessage!, statusCode: 401)
+                );
 
             if (loginResult.User == null)
             {
-                return Unauthorized(new ResponseDto<object>(false, "User Not Found!"));
+                return Unauthorized(
+                    new ResponseDto<object>(false, "User Not Found!", statusCode: 401)
+                );
             }
 
             var accessToken = _tokenService.GenerateAccessToken(loginResult.User);
@@ -80,7 +86,9 @@ namespace simpleBlogApi.Controllers
 
             if (!result)
             {
-                return Unauthorized(new ResponseDto<object>(false, "Refresh Token Error!"));
+                return Unauthorized(
+                    new ResponseDto<object>(false, "Refresh Token Error!", statusCode: 401)
+                );
             }
 
             return Ok(
@@ -107,7 +115,11 @@ namespace simpleBlogApi.Controllers
             if (user == null)
             {
                 return Unauthorized(
-                    new ResponseDto<object>(false, "Invalid or Expired Refresh Token")
+                    new ResponseDto<object>(
+                        false,
+                        "Invalid or Expired Refresh Token",
+                        statusCode: 401
+                    )
                 );
             }
 
@@ -121,7 +133,9 @@ namespace simpleBlogApi.Controllers
 
             if (!resultRefresh)
             {
-                return Unauthorized(new ResponseDto<object>(false, "Refresh token creation error"));
+                return Unauthorized(
+                    new ResponseDto<object>(false, "Refresh token creation error", statusCode: 401)
+                );
             }
 
             return Ok(

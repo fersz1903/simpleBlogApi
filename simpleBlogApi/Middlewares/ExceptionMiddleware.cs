@@ -41,7 +41,9 @@ namespace simpleBlogApi.Middlewares
                 var errorResponse = new ErrorDetails
                 {
                     StatusCode = context.Response.StatusCode,
-                    Message = ex.Message,
+                    Message = _env.IsDevelopment()
+                        ? ex.Message
+                        : "An unexpected error occurred. Please try again later.",
                     StackTrace = _env.IsDevelopment() ? ex.StackTrace : null,
                 };
                 var options = new JsonSerializerOptions
