@@ -6,5 +6,10 @@ using simpleBlogApi.Entities;
 
 namespace simpleBlogApi.Repositories.Interfaces
 {
-    public interface IPostRepository { }
+    public interface IPostRepository
+    {
+        // Task<Post?> GetPostByPublicIdAsync(Guid publicId);
+        Task<IEnumerable<Post>> GetAllPostsWithImagesAsync();
+        Task<Post?> GetPostWithImagesAsync(Guid PublicId);
+    }
 }

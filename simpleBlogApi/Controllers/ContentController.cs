@@ -26,7 +26,7 @@ namespace simpleBlogApi.Controllers
             _contentService = contentService;
         }
 
-        [HttpPost("createContent")]
+        [HttpPost("CreateContent")]
         public async Task<IActionResult> CreateContent(CreateContentDto dto)
         {
             var result = await _contentService.CreateContentAsync(dto);
@@ -37,6 +37,20 @@ namespace simpleBlogApi.Controllers
         public async Task<IActionResult> GetAllContents()
         {
             var result = await _contentService.GetAllContentsAsync();
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpPut("UpdateContent")]
+        public async Task<IActionResult> UpdateContent([FromForm] UpdateContentDto dto)
+        {
+            var result = await _contentService.UpdateContentAsync(dto);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpDelete("DeleteContent")]
+        public async Task<IActionResult> DeleteContent(string ContentPublicId)
+        {
+            var result = await _contentService.DeleteContentAsync(ContentPublicId);
             return StatusCode(result.StatusCode, result);
         }
     }

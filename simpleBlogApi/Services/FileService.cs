@@ -58,10 +58,18 @@ namespace simpleBlogApi.Services
             return Path.Combine(folderName, fileName).Replace("\\", "/");
         }
 
-        public void DeleteFiles(List<string> files)
+        public void DeleteFiles(params string[] files)
         {
             foreach (var file in files)
-            {
+            { // security for path travelling
+                if (
+                    string.IsNullOrWhiteSpace(file)
+                    || file.Contains("..")
+                    || Path.IsPathFullyQualified(file)
+                )
+                {
+                    continue; // log or continue
+                }
                 var path = Path.Combine("wwwroot/", file);
                 if (File.Exists(path))
                 {

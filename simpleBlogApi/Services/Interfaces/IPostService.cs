@@ -11,5 +11,24 @@ namespace simpleBlogApi.Services.Interfaces
     {
         public Task<ResponseDto<object>> CreatePostAsync(CreatePostWithContentDto dto);
         public Task<ResponseDto<object>> GetAllPostsAsync();
+        public Task<ResponseDto<object>> UpdatePostDetailsAsync(
+            string PostPublicId,
+            UpdatePostDto dto
+        );
+        public Task<ResponseDto<object>> UpdatePostCoverImageAsync(
+            string PostPublicId,
+            IFormFile file
+        );
+        public Task<ResponseDto<object>> AddImagesToPostAsync(
+            string PostPublicId,
+            List<IFormFile> Images
+        );
+
+        public Task<ResponseDto<object>> DeleteImagesFromPostAsync(
+            string PostPublicId,
+            List<Guid> ImageIds
+        );
+
+        public Task<ResponseDto<object>> DeletePostAsync(string PostPublicId);
     }
 }

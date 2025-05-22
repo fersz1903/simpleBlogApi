@@ -27,4 +27,9 @@ public class Repository<T> : IRepository<T>
     public void Delete(T entity) => _dbSet.Remove(entity);
 
     public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
+
+    public async Task<T?> GetByPublicIdAsync(Guid publicId)
+    {
+        return await _dbSet.FirstOrDefaultAsync(x => EF.Property<Guid>(x, "PublicId") == publicId);
+    }
 }

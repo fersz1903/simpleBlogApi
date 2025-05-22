@@ -44,6 +44,7 @@ builder.Services.Configure<FileUploadSettings>(
     builder.Configuration.GetSection("FileUploadSettings")
 );
 builder.Services.AddScoped<IContentRepository, ContentRepository>();
+builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<IContentService, ContentService>();
 builder.Services.AddScoped<IPostService, PostService>();
 #endregion

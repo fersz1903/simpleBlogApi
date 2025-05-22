@@ -11,5 +11,7 @@ namespace simpleBlogApi.Services.Interfaces
     {
         public Task<ResponseDto<object>> CreateContentAsync(CreateContentDto dto);
         public Task<ResponseDto<object>> GetAllContentsAsync();
+        public Task<ResponseDto<object>> UpdateContentAsync(UpdateContentDto dto);
+        public Task<ResponseDto<object>> DeleteContentAsync(string contentPublicId);
     }
 }

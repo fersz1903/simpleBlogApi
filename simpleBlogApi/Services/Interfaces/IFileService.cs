@@ -8,6 +8,6 @@ namespace simpleBlogApi.Services.Interfaces
     public interface IFileService
     {
         public Task<string> SaveFileAsync(IFormFile formFile, string folderName);
-        public void DeleteFiles(List<string> files);
+        public void DeleteFiles(params string[] files);
     }
 }

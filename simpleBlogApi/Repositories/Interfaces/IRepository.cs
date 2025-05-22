@@ -9,4 +9,5 @@ public interface IRepository<T>
     void Update(T entity);
     void Delete(T entity);
     Task SaveChangesAsync();
+    Task<T?> GetByPublicIdAsync(Guid publicId);
 }
