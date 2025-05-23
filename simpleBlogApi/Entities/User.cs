@@ -12,7 +12,10 @@ namespace simpleBlogApi.Entities
         public string Email { get; set; } = null!;
         public string Name { get; set; } = null!;
         public string PasswordHash { get; set; } = null!;
-        public Role Role { get; set; } = new Role { Name = "User" };
+
+        public int RoleId { get; set; }
+        public Role Role { get; set; } = null!;
+
         public string RefreshToken { get; set; } = string.Empty;
         public DateTime RefreshTokenExpiryTime { get; set; }
     }

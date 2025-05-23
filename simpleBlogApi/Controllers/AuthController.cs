@@ -11,6 +11,7 @@ using simpleBlogApi.Dtos.User;
 using simpleBlogApi.Entities;
 using simpleBlogApi.Repositories.Interfaces;
 using simpleBlogApi.Services;
+using simpleBlogApi.Services.Interfaces;
 
 namespace simpleBlogApi.Controllers
 {
@@ -21,137 +22,40 @@ namespace simpleBlogApi.Controllers
         private readonly IUserRepository _userRepository;
         private readonly ILogger<AuthController> _logger;
         private readonly ITokenService _tokenService;
+        private readonly IAuthService _authService;
 
         public AuthController(
             ILogger<AuthController> logger,
             IUserRepository userRepository,
-            ITokenService tokenService
+            ITokenService tokenService,
+            IAuthService authService
         )
         {
             _logger = logger;
             _userRepository = userRepository;
             _tokenService = tokenService;
+            _authService = authService;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto dto)
         {
-            User user = new User { Email = dto.Email, Name = dto.Name };
-            var result = await _userRepository.RegisterAsync(user, dto.Password);
-
-            if (!result)
-            {
-                return BadRequest(
-                    new ResponseDto<object>(false, "Email already in use", statusCode: 400)
-                );
-            }
-            return Ok(
-                new ResponseDto<object>(
-                    true,
-                    "User registered successfully",
-                    new
-                    {
-                        user.PublicId,
-                        user.Name,
-                        user.Email,
-                    }
-                )
-            );
+            var result = await _authService.RegisterUserAsync(dto);
+            return StatusCode(result.StatusCode, result);
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto dto)
         {
-            var loginResult = await _userRepository.LoginAsync(dto.Email, dto.Password);
-
-            if (!loginResult.Success)
-                return Unauthorized(
-                    new ResponseDto<object>(false, loginResult.ErrorMessage!, statusCode: 401)
-                );
-
-            if (loginResult.User == null)
-            {
-                return Unauthorized(
-                    new ResponseDto<object>(false, "User Not Found!", statusCode: 401)
-                );
-            }
-
-            var accessToken = _tokenService.GenerateAccessToken(loginResult.User);
-            var refreshToken = _tokenService.GenerateRefreshToken();
-
-            var result = await _userRepository.SaveRefreshTokenDBAsync(
-                loginResult.User.Id,
-                refreshToken
-            );
-
-            if (!result)
-            {
-                return Unauthorized(
-                    new ResponseDto<object>(false, "Refresh Token Error!", statusCode: 401)
-                );
-            }
-
-            return Ok(
-                new ResponseDto<object>(
-                    true,
-                    "Login successfull",
-                    new
-                    {
-                        UserId = loginResult?.User?.PublicId,
-                        loginResult?.User?.Email,
-                        loginResult?.User?.Name,
-                        Role = loginResult?.User?.Role?.Name,
-                        Token = new { accessToken, refreshToken },
-                    }
-                )
-            );
+            var result = await _authService.LoginAsync(dto);
+            return StatusCode(result.StatusCode, result);
         }
 
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh([FromBody] RefreshRequestDto dto)
         {
-            var user = await _userRepository.GetByRefreshTokenAsync(dto.RefreshToken);
-
-            if (user == null)
-            {
-                return Unauthorized(
-                    new ResponseDto<object>(
-                        false,
-                        "Invalid or Expired Refresh Token",
-                        statusCode: 401
-                    )
-                );
-            }
-
-            var newAccessToken = _tokenService.GenerateAccessToken(user);
-            var newRefreshToken = _tokenService.GenerateRefreshToken();
-
-            var resultRefresh = await _userRepository.SaveRefreshTokenDBAsync(
-                user.Id,
-                newRefreshToken
-            );
-
-            if (!resultRefresh)
-            {
-                return Unauthorized(
-                    new ResponseDto<object>(false, "Refresh token creation error", statusCode: 401)
-                );
-            }
-
-            return Ok(
-                new ResponseDto<object>(
-                    true,
-                    "Refresh Succesfull",
-                    new
-                    {
-                        Token = new
-                        {
-                            accessToken = newAccessToken,
-                            refreshToken = newRefreshToken,
-                        },
-                    }
-                )
-            );
+            var result = await _authService.RefreshAsync(dto);
+            return StatusCode(result.StatusCode, result);
         }
     }
 }

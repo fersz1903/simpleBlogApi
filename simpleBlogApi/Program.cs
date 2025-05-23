@@ -1,6 +1,9 @@
+using System.Text;
 using DotNetEnv;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using simpleBlogApi.Data;
 using simpleBlogApi.Entities;
@@ -12,6 +15,23 @@ using simpleBlogApi.Services;
 using simpleBlogApi.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
+
+#region CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(
+        "Development",
+        policy =>
+        {
+            policy
+                .AllowCredentials()
+                .WithOrigins("http://localhost:5173")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        }
+    );
+});
+#endregion
 
 // Add services to the container.
 Env.Load();
@@ -33,6 +53,45 @@ var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION");
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
 #endregion
 
+#region AUTH
+var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET");
+var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER");
+var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE");
+if (
+    string.IsNullOrWhiteSpace(jwtSecret)
+    || string.IsNullOrWhiteSpace(jwtIssuer)
+    || string.IsNullOrWhiteSpace(jwtAudience)
+)
+{
+    throw new InvalidOperationException("JWT environment variables are not set.");
+}
+builder
+    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(
+        "OnlyAdmin",
+        policy =>
+        {
+            policy.RequireRole("Admin");
+        }
+    );
+});
+
+#endregion
 
 #region DEPENDENCY
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -47,6 +106,8 @@ builder.Services.AddScoped<IContentRepository, ContentRepository>();
 builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<IContentService, ContentService>();
 builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 #endregion
 
 var app = builder.Build();
@@ -60,6 +121,7 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseCors("Development");
     app.UseSwagger(options =>
     {
         options.RouteTemplate = "/openapi/{documentName}.json";
